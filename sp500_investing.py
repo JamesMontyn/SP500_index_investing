@@ -1,26 +1,25 @@
-import pandas as pd
 import tools as tl
-
+import investor
 
 spy_df = tl.get_spy_dataframe()
 
 print(spy_df)
 
 # Necessary pct. changes per day
-change_open_to_close = []  # Pct change between Open and Close
-change_open_to_low = []  # Pct change between Open and Low
-change_prev_close_to_close = []  # Pct change between Close of previous day and Close
-change_prev_close_to_low = []  # Pct change between Close of previous day and Low
+change_open_to_close_df, change_open_to_low_df, \
+    change_prev_close_to_close_df, change_prev_close_to_low_df = tl.create_dfs(spy_df)
 
-tl.fill_lists(spy_df, change_open_to_close, change_prev_close_to_low,
-              change_prev_close_to_close, change_prev_close_to_low)
+print(change_open_to_close_df)
 
+test = investor.Investor(change_open_to_close_df, 100, '>', 2, 2, 1)
+test.calculate_investments()
+
+"""
 # Results dataframe
 results_df = pd.DataFrame(index=spy_df.index)
 
 print(results_df)
 
-"""
 results_df['Pct. Open to Close'] = change_open_to_close
 results_df['Pct. Open to Low'] = change_open_to_low
 results_df['Pct. Prev. Close to Close'] = change_prevclose_to_close

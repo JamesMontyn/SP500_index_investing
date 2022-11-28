@@ -1,5 +1,5 @@
 import investment as iv
-
+from dateutil.relativedelta import relativedelta
 
 class Investor:
     """The Investor class is a modal calculator of an investing strategy.
@@ -46,7 +46,7 @@ class Investor:
         _magnitude: int
             how many times the budget should be spent when the determine function
             finds a right time to invest.
-            e.g. magnitude = 1: invests budget + 1*budget when determine functions gives true
+            e.g. magnitude = 2: invests 2*budget when determine functions gives true
         """
     def __init__(self, change_list, budget, determiner, determinant, frequency, magnitude):
         """Constructs a new Investor object
@@ -102,8 +102,29 @@ class Investor:
     def determine_operator_constant(self, _):
         return self._determinant
 
+    def next_end_date_interval(self, current_date):
+        """Returns the last day of current_date + _frequency months
+            e.g. current_date = (2000, 1, 30), _frequency = 2
+            then next end_date = (2000, 3, 31)
+
+        Parameters
+        ----------
+        current_date: datetime
+            the current date
+        """
+        end_date = (current_date + relativedelta(months=self._frequency)).replace(day=28) + relativedelta(days=4)
+        return end_date - relativedelta(days=end_date.day)
+
     def calculate_investments(self):
-        #TODO: calculation
+        print(self._change_list.index[0])
+        date_end_interval = self.next_end_date_interval((self._change_list.index[0]))
+        print(date_end_interval)
+
+        #Initial buy (always start with a first buy)
+
+
+        #for date in self._change_list:
+
 
 """
 import datetime as dt
