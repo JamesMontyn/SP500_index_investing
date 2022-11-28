@@ -2,7 +2,79 @@ import investment as iv
 
 
 class Investor:
+    """The Investor class is a modal calculator of an investing strategy.
+
+        Private Variables
+        -----------------
+        _investment: Investment
+            holds the data of the investment in SPY
+
+        _change_list: list
+            list of certain pct. changes per date the strategy is based on
+
+        _budget: int
+            normal budget to invest when determine function decides
+            or when at the end of frequency (if determine function never decides)
+
+        _determine: def
+            holds the determine function, which has as input an integer and gives
+            a decision to invest (true) or not (false) based on the determinant.
+            All possible determine functions:
+                - determine_operator_greater
+                - determine_operator_lesser
+                - determine_operator_constant
+
+        _determiner: int
+            the operator of the determine function, given as a string
+            the possible determiners:
+                - '>' - greater than
+                - '<' - less than
+                - '1' - determiner is a constant, decided by determinant
+
+        _determinant: int
+            the factor to compare with in the determine function
+            this can be any number. If determiner is constant ('1'), then
+            determinant will decide if the determine function will always
+            give true (1), or false (0).
+
+        _frequency: int
+            how many months are allowed to determine when to invest the
+            given budget. If the determine function does not find a right
+            time to invest, then budget will be invested at the end of interval
+            e.g. frequency = 1: invests budget per month (a month being: Jan., Feb., etc...)
+
+        _magnitude: int
+            how many times the budget should be spent when the determine function
+            finds a right time to invest.
+            e.g. magnitude = 1: invests budget + 1*budget when determine functions gives true
+        """
     def __init__(self, change_list, budget, determiner, determinant, frequency, magnitude):
+        """Constructs a new Investor object
+
+        Parameters
+        ----------
+        change_list: list
+            see _change_list
+
+        budget: int
+            see _budget
+
+        determiner: int
+            the type of determine function, given as a string
+            the possible determiners:
+                - '>' - greater than
+                - '<' - less than
+                - '1' - determiner is a constant, decided by determinant
+
+        determinant: int
+            see _determinant
+
+        frequency: int
+            see _frequency
+
+        magnitude: int
+            see _magnitude
+        """
         self._investment = iv.Investment
         self._change_list = change_list
         self._budget = budget
@@ -15,6 +87,7 @@ class Investor:
             self._determine = self.determine_operator_constant
         else:
             print('Determiner {} is not a valid option'.format(self._determine))
+            self._determine = self.determine_operator_constant #default
 
         self._determinant = determinant
         self._frequency = frequency
