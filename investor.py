@@ -44,13 +44,25 @@ class Investor:
             time to invest, then budget will be invested at the end of interval
             e.g. frequency = 1: invests budget per month (a month being: Jan., Feb., etc...)
 
+        _interval: int
+            on what day of the month the next interval will start.
+            Options:
+                0: first day of the month
+                1: last day of the month
+
+        _end_date_interval: def
+            function that returns the end date of current interval. Possible functions:
+                - first_day_month_interval
+                - last_day_month_interval
+
         _magnitude: int
             how many times the budget should be spent when the determine function
             finds a right time to invest.
             e.g. magnitude = 2: invests 2*budget when determine functions gives true
         """
 
-    def __init__(self, change_list, budget, determiner, determinant, frequency, magnitude):
+    def __init__(self, change_list, budget, determiner, determinant,
+                 frequency, interval, magnitude):
         """Constructs a new Investor object
 
         Parameters
@@ -74,6 +86,9 @@ class Investor:
         frequency: int
             see _frequency
 
+        interval: int
+            see _interval
+
         magnitude: float
             see _magnitude
         """
@@ -91,6 +106,14 @@ class Investor:
             print('Determiner {} is not a valid option'.format(self._determine))
             self._determine = self.determine_operator_constant  # default
 
+        if interval == 0:
+            self._end_date_interval = self.first_day_month_interval
+        elif interval == 1:
+            self._end_date_interval = self.last_day_month_interval
+        else:
+            print('interval {} is not a valid option'.format(self._determine))
+            self._end_date_interval = self.first_day_next_interval
+
         self._determinant = determinant
         self._frequency = frequency
         self._magnitude = magnitude
@@ -102,9 +125,9 @@ class Investor:
         return input_ < self._determinant
 
     def determine_operator_constant(self, _):
-        return self._determinant
+        return bool(self._determinant)
 
-    def next_end_date_interval(self, current_date):
+    def last_day_month_interval(self, current_date):
         """Returns the last day of current_date + _frequency months
             e.g. current_date = (2000, 1, 30), _frequency = 2
             then next end_date = (2000, 3, 31)
@@ -117,10 +140,24 @@ class Investor:
         end_date = (current_date + relativedelta(months=self._frequency)).replace(day=28) + relativedelta(days=4)
         return end_date - relativedelta(days=end_date.day)
 
+    def first_day_month_interval(self, current_date):
+        """Returns the first day of current_date + _frequency months
+            e.g. current_date = (2000, 1, 30), _frequency = 2
+            then next end_date = (2000, 3, 1)
+
+        Parameters
+        ----------
+        current_date: datetime
+            the current date
+        """
+        end_date = (current_date + relativedelta(months=self._frequency)).replace(day=1)
+        return end_date
+
     def calculate_investments(self):
         print(self._change_list.index[0])
-        date_end_interval = self.next_end_date_interval((self._change_list.index[0]))
-        print(date_end_interval)
+        interval_end_date = self._end_date_interval((self._change_list.index[1]))
+        print(interval_end_date)
+        factor_determine_buy_price = (1 + (self._determinant / 100))
 
         # Initial buy (always start with a first buy)
         buy_price = self._change_list.iloc[0, 1]
@@ -129,8 +166,17 @@ class Investor:
 
         print(self._investment.average_price(), self._investment.total_invested(), self._investment.number_of_share())
 
-        # for date in self._change_list:
+        for date in self._change_list.index[1:]:
+            if date is interval_end_date:
+                buy_price = self._change_list.loc[date][1]
+                self._investment.invest(buy_price, (self._budget / buy_price))
+                interval_end_date = self._end_date_interval(date)
+                print(date)
+                continue
 
+            if self._determine(self._change_list.loc[date][0]):
+                buy_price = self._change_list.loc[date][2] * factor_determine_buy_price
+                self._investment.invest(buy_price, ((self._budget*self._magnitude) / buy_price))
 
 """
 import datetime as dt
