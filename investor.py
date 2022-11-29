@@ -138,7 +138,11 @@ class Investor:
             the current date
         """
         end_date = (current_date + relativedelta(months=self._frequency)).replace(day=28) + relativedelta(days=4)
-        return end_date - relativedelta(days=end_date.day)
+        end_date -= relativedelta(days=end_date.day)
+        # adjust to the closest existing last day of month in _change_list
+        while end_date not in self._change_list.index:
+            end_date -= relativedelta(days=1)
+        return end_date
 
     def first_day_month_interval(self, current_date):
         """Returns the first day of current_date + _frequency months
@@ -151,32 +155,47 @@ class Investor:
             the current date
         """
         end_date = (current_date + relativedelta(months=self._frequency)).replace(day=1)
+        # adjust to the closest existing first day of month in _change_list
+        while end_date not in self._change_list.index:
+            end_date += relativedelta(days=1)
         return end_date
 
+    def print_data_frame(self):
+        print(self._change_list)
+
     def calculate_investments(self):
-        print(self._change_list.index[0])
         interval_end_date = self._end_date_interval((self._change_list.index[1]))
-        print(interval_end_date)
         factor_determine_buy_price = (1 + (self._determinant / 100))
 
         # Initial buy (always start with a first buy)
         buy_price = self._change_list.iloc[0, 1]
-        print(buy_price)
         self._investment.invest(buy_price, (self._budget / buy_price))
 
-        print(self._investment.average_price(), self._investment.total_invested(), self._investment.number_of_share())
+        # looping over next dates with a while loop to skip dates that
+        # do not have to be looked at (e.g. already invested in interval)
+        i = 0
+        while i < self._change_list.index[1:].shape[0]:
+            print(self._change_list.index[i], interval_end_date)
 
-        for date in self._change_list.index[1:]:
-            if date is interval_end_date:
-                buy_price = self._change_list.loc[date][1]
+            # buy if end of current interval is reached
+            if self._change_list.index[i] == interval_end_date:
+                buy_price = self._change_list.iloc[i][1]
                 self._investment.invest(buy_price, (self._budget / buy_price))
-                interval_end_date = self._end_date_interval(date)
-                print(date)
-                continue
+                interval_end_date = self._end_date_interval(self._change_list.index[i])
+                print(self._change_list.index[i])
 
-            if self._determine(self._change_list.loc[date][0]):
-                buy_price = self._change_list.loc[date][2] * factor_determine_buy_price
+            # buy if determine function gives True
+            elif self._determine(self._change_list.iloc[i][0]):
+                buy_price = self._change_list.iloc[i][2] * factor_determine_buy_price
                 self._investment.invest(buy_price, ((self._budget*self._magnitude) / buy_price))
+
+                # skipping the rest of the dates in this interval
+                while self._change_list.index[i] < interval_end_date:
+                    i += 1
+
+                interval_end_date = self._end_date_interval(self._change_list.index[i])
+
+            i += 1
 
 """
 import datetime as dt
