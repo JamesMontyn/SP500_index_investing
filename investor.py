@@ -1,6 +1,7 @@
 import investment as iv
 from dateutil.relativedelta import relativedelta
 
+
 class Investor:
     """The Investor class is a modal calculator of an investing strategy.
 
@@ -48,34 +49,35 @@ class Investor:
             finds a right time to invest.
             e.g. magnitude = 2: invests 2*budget when determine functions gives true
         """
+
     def __init__(self, change_list, budget, determiner, determinant, frequency, magnitude):
         """Constructs a new Investor object
 
         Parameters
         ----------
-        change_list: list
+        change_list: pandas data frame
             see _change_list
 
         budget: int
             see _budget
 
-        determiner: int
+        determiner: string
             the type of determine function, given as a string
             the possible determiners:
                 - '>' - greater than
                 - '<' - less than
                 - '1' - determiner is a constant, decided by determinant
 
-        determinant: int
+        determinant: float
             see _determinant
 
         frequency: int
             see _frequency
 
-        magnitude: int
+        magnitude: float
             see _magnitude
         """
-        self._investment = iv.Investment
+        self._investment = iv.Investment()
         self._change_list = change_list
         self._budget = budget
 
@@ -87,7 +89,7 @@ class Investor:
             self._determine = self.determine_operator_constant
         else:
             print('Determiner {} is not a valid option'.format(self._determine))
-            self._determine = self.determine_operator_constant #default
+            self._determine = self.determine_operator_constant  # default
 
         self._determinant = determinant
         self._frequency = frequency
@@ -120,10 +122,14 @@ class Investor:
         date_end_interval = self.next_end_date_interval((self._change_list.index[0]))
         print(date_end_interval)
 
-        #Initial buy (always start with a first buy)
+        # Initial buy (always start with a first buy)
+        buy_price = self._change_list.iloc[0, 1]
+        print(buy_price)
+        self._investment.invest(buy_price, (self._budget / buy_price))
 
+        print(self._investment.average_price(), self._investment.total_invested(), self._investment.number_of_share())
 
-        #for date in self._change_list:
+        # for date in self._change_list:
 
 
 """
@@ -196,5 +202,3 @@ shares_ld.remove(0)
 avgprice_oc.remove(0)
 shares_oc.remove(0)
 """
-
-

@@ -52,16 +52,16 @@ def create_dfs(spy_df):
         prev_close = spy_df['Close'][date]
 
     change_open_to_close_df = pd.DataFrame(index=spy_df.index,
-                                           columns=['Pct. Open to Close'],
-                                           data=change_open_to_close)
+                                           data={'Pct. Open to Close': change_open_to_close,
+                                                 'Open': spy_df['Open']})
     change_open_to_low_df = pd.DataFrame(index=spy_df.index,
-                                         columns=['Pct. Open to Low'],
-                                         data=change_open_to_low)
+                                         data={'Pct. Open to Low': change_open_to_low,
+                                               'Open': spy_df['Open']})
     change_prev_close_to_close_df = pd.DataFrame(index=spy_df.index,
-                                                 columns=['Pct. Prev. Close to Close'],
-                                                 data=change_prev_close_to_close)
+                                                 data={'Pct. Prev. Close to Close': change_prev_close_to_close,
+                                                       'Close': spy_df['Close']})
     change_prev_close_to_low_df = pd.DataFrame(index=spy_df.index,
-                                               columns=['Pct. Prev. Close to Low'],
-                                               data=change_prev_close_to_low)
+                                               data={'Pct. Prev. Close to Low': change_prev_close_to_low,
+                                                     'Close': ['Close']})
 
     return change_open_to_close_df, change_open_to_low_df, change_prev_close_to_close_df, change_prev_close_to_low_df

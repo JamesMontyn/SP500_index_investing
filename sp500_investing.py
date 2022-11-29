@@ -6,6 +6,7 @@ spy_df = tl.get_spy_dataframe()
 print(spy_df)
 
 # Necessary pct. changes per day
+# columns: 1: pct. change 2. close/open price (depends on type pct. change)
 change_open_to_close_df, change_open_to_low_df, \
     change_prev_close_to_close_df, change_prev_close_to_low_df = tl.create_dfs(spy_df)
 

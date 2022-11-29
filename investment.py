@@ -19,10 +19,10 @@ class Investment:
 
         Parameters
         ----------
-        share_price: int
+        share_price: float
             the share price of the added investment
 
-        quantity: int
+        quantity: float
             the number of shares of SPY added
         """
         self._total_invested += (share_price*quantity)
