@@ -12,7 +12,12 @@ change_open_to_close_df, change_open_to_low_df, \
 
 print(change_open_to_close_df)
 
-test = investor.Investor(change_open_to_close_df, 100, '1', 0, 1, 1, 1)
+test = investor.Investor(change_open_to_close_df, 1000, '1', 0, 1, 1, 1)
 test.calculate_investments()
 test.print_data_frame(False)
 test.data_frame_to_csv("testdata.csv")
+
+test2 = investor.Investor(change_open_to_close_df, 1000, '1', 0, 1, 0, 1)
+test2.calculate_investments()
+test2.print_data_frame(False)
+test2.data_frame_to_csv("testdata2.csv")

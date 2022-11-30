@@ -95,7 +95,7 @@ class Investor:
             see _magnitude
         """
         self._investment = iv.Investment()
-        self._change_df = change_df
+        self._data_frame = change_df.copy()
         self._budget = budget
 
         if determiner == '>':
@@ -142,7 +142,7 @@ class Investor:
         end_date = (current_date + relativedelta(months=self._frequency)).replace(day=28) + relativedelta(days=4)
         end_date -= relativedelta(days=end_date.day)
         # adjust to the closest existing last day of month in _change_df
-        while end_date not in self._change_df.index:
+        while end_date not in self._data_frame.index:
             end_date -= relativedelta(days=1)
         return end_date
 
@@ -158,7 +158,9 @@ class Investor:
         """
         end_date = (current_date + relativedelta(months=self._frequency)).replace(day=1)
         # adjust to the closest existing first day of month in _change_df
-        while end_date not in self._change_df.index:
+        while end_date not in self._data_frame.index:
+            if end_date > self._data_frame.index[-1]:
+                return end_date
             end_date += relativedelta(days=1)
         return end_date
 
@@ -172,9 +174,9 @@ class Investor:
         """
         if full:
             with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-                print(self._change_df)
+                print(self._data_frame)
         else:
-            print(self._change_df)
+            print(self._data_frame)
 
     def data_frame_to_csv(self, file_name):
         """Creates a new csv file containing the dataframe
@@ -184,7 +186,7 @@ class Investor:
         file_name: string
             the filename of the csv file
         """
-        self._change_df.to_csv(file_name)
+        self._data_frame.to_csv(file_name)
 
     def calculate_investments(self):
         """Performs the investment strategy, as such:
@@ -194,42 +196,42 @@ class Investor:
                 2.2. Buy if determine function gives True (and haven't bought in interval yet)
         """
         # Initial buy (always start with a first buy)
-        buy_price = self._change_df.iloc[0, 1]
-        date = self._change_df.index[0]
+        buy_price = self._data_frame.iloc[0, 1]
+        date = self._data_frame.index[0]
         self._investment.invest(buy_price, (self._budget / buy_price))
-        self._change_df.at[date, 'Invested'] = self._investment.total_invested()
-        self._change_df.at[date, 'Shares'] = self._investment.number_of_shares()
-        self._change_df.at[date, 'Avg. p/s'] = self._investment.average_price()
+        self._data_frame.at[date, 'Invested'] = self._investment.total_invested()
+        self._data_frame.at[date, 'Shares'] = self._investment.number_of_shares()
+        self._data_frame.at[date, 'Avg. p/s'] = self._investment.average_price()
 
         # looping over next dates with a while loop to skip dates that
         # do not have to be looked at (e.g. already invested in interval)
-        interval_end_date = self._end_date_interval((self._change_df.index[0]))
+        interval_end_date = self._end_date_interval((self._data_frame.index[0]))
         factor_determine_buy_price = (1 + (self._determinant / 100))
         i = 1
-        while i < self._change_df.index.shape[0]:
-            date = self._change_df.index[i]
+        while i < self._data_frame.index.shape[0]:
+            date = self._data_frame.index[i]
 
             # buy if end of current interval is reached
             if date == interval_end_date:
-                buy_price = self._change_df.iloc[i][1]
+                buy_price = self._data_frame.iloc[i][1]
                 self._investment.invest(buy_price, (self._budget / buy_price))
                 interval_end_date = self._end_date_interval(date)
-                self._change_df.at[date, 'Invested'] = self._investment.total_invested()
-                self._change_df.at[date, 'Shares'] = self._investment.number_of_shares()
-                self._change_df.at[date, 'Avg. p/s'] = self._investment.average_price()
+                self._data_frame.at[date, 'Invested'] = self._investment.total_invested()
+                self._data_frame.at[date, 'Shares'] = self._investment.number_of_shares()
+                self._data_frame.at[date, 'Avg. p/s'] = self._investment.average_price()
 
             # buy if determine function gives True
-            elif self._determine(self._change_df.iloc[i][0]):
-                buy_price = self._change_df.iloc[i][2] * factor_determine_buy_price
+            elif self._determine(self._data_frame.iloc[i][0]):
+                buy_price = self._data_frame.iloc[i][1] * factor_determine_buy_price
                 self._investment.invest(buy_price, ((self._budget*self._magnitude) / buy_price))
-                self._change_df.at[date, 'Invested'] = self._investment.total_invested()
-                self._change_df.at[date, 'Shares'] = self._investment.number_of_shares()
-                self._change_df.at[date, 'Avg. p/s'] = self._investment.average_price()
+                self._data_frame.at[date, 'Invested'] = self._investment.total_invested()
+                self._data_frame.at[date, 'Shares'] = self._investment.number_of_shares()
+                self._data_frame.at[date, 'Avg. p/s'] = self._investment.average_price()
 
                 # skipping the rest of the dates in this interval
                 while date < interval_end_date:
                     i += 1
-                    date = self._change_df.index[i]
+                    date = self._data_frame.index[i]
 
                 interval_end_date = self._end_date_interval(date)
 
