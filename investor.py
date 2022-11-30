@@ -1,3 +1,5 @@
+import datetime
+import pandas as pd
 import investment as iv
 from dateutil.relativedelta import relativedelta
 
@@ -10,8 +12,8 @@ class Investor:
         _investment: Investment
             holds the data of the investment in SPY
 
-        _change_list: list
-            list of certain pct. changes per date the strategy is based on
+        _change_df: pandas date frame
+            dataframe of certain pct. changes per date the strategy is based on
 
         _budget: int
             normal budget to invest when determine function decides
@@ -61,14 +63,14 @@ class Investor:
             e.g. magnitude = 2: invests 2*budget when determine functions gives true
         """
 
-    def __init__(self, change_list, budget, determiner, determinant,
+    def __init__(self, change_df, budget, determiner, determinant,
                  frequency, interval, magnitude):
         """Constructs a new Investor object
 
         Parameters
         ----------
-        change_list: pandas data frame
-            see _change_list
+        change_df: pandas data frame
+            see _change_df
 
         budget: int
             see _budget
@@ -93,7 +95,7 @@ class Investor:
             see _magnitude
         """
         self._investment = iv.Investment()
-        self._change_list = change_list
+        self._change_df = change_df
         self._budget = budget
 
         if determiner == '>':
@@ -112,7 +114,7 @@ class Investor:
             self._end_date_interval = self.last_day_month_interval
         else:
             print('interval {} is not a valid option'.format(self._determine))
-            self._end_date_interval = self.first_day_next_interval
+            self._end_date_interval = self.first_day_month_interval
 
         self._determinant = determinant
         self._frequency = frequency
@@ -139,8 +141,8 @@ class Investor:
         """
         end_date = (current_date + relativedelta(months=self._frequency)).replace(day=28) + relativedelta(days=4)
         end_date -= relativedelta(days=end_date.day)
-        # adjust to the closest existing last day of month in _change_list
-        while end_date not in self._change_list.index:
+        # adjust to the closest existing last day of month in _change_df
+        while end_date not in self._change_df.index:
             end_date -= relativedelta(days=1)
         return end_date
 
@@ -155,115 +157,80 @@ class Investor:
             the current date
         """
         end_date = (current_date + relativedelta(months=self._frequency)).replace(day=1)
-        # adjust to the closest existing first day of month in _change_list
-        while end_date not in self._change_list.index:
+        # adjust to the closest existing first day of month in _change_df
+        while end_date not in self._change_df.index:
             end_date += relativedelta(days=1)
         return end_date
 
-    def print_data_frame(self):
-        print(self._change_list)
+    def print_data_frame(self, full):
+        """Prints the data frame
+
+        Parameters
+        ----------
+        full: bool
+            print full data frame or not
+        """
+        if full:
+            with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+                print(self._change_df)
+        else:
+            print(self._change_df)
+
+    def data_frame_to_csv(self, file_name):
+        """Creates a new csv file containing the dataframe
+
+        Parameters
+        ----------
+        file_name: string
+            the filename of the csv file
+        """
+        self._change_df.to_csv(file_name)
 
     def calculate_investments(self):
-        interval_end_date = self._end_date_interval((self._change_list.index[1]))
-        factor_determine_buy_price = (1 + (self._determinant / 100))
-
+        """Performs the investment strategy, as such:
+            1. Initial buy, buy at first date in the data frame
+            Loop:
+                2.1. Buy if at end of current interval
+                2.2. Buy if determine function gives True (and haven't bought in interval yet)
+        """
         # Initial buy (always start with a first buy)
-        buy_price = self._change_list.iloc[0, 1]
+        buy_price = self._change_df.iloc[0, 1]
+        date = self._change_df.index[0]
         self._investment.invest(buy_price, (self._budget / buy_price))
+        self._change_df.at[date, 'Invested'] = self._investment.total_invested()
+        self._change_df.at[date, 'Shares'] = self._investment.number_of_shares()
+        self._change_df.at[date, 'Avg. p/s'] = self._investment.average_price()
 
         # looping over next dates with a while loop to skip dates that
         # do not have to be looked at (e.g. already invested in interval)
-        i = 0
-        while i < self._change_list.index[1:].shape[0]:
-            print(self._change_list.index[i], interval_end_date)
+        interval_end_date = self._end_date_interval((self._change_df.index[0]))
+        factor_determine_buy_price = (1 + (self._determinant / 100))
+        i = 1
+        while i < self._change_df.index.shape[0]:
+            date = self._change_df.index[i]
 
             # buy if end of current interval is reached
-            if self._change_list.index[i] == interval_end_date:
-                buy_price = self._change_list.iloc[i][1]
+            if date == interval_end_date:
+                buy_price = self._change_df.iloc[i][1]
                 self._investment.invest(buy_price, (self._budget / buy_price))
-                interval_end_date = self._end_date_interval(self._change_list.index[i])
-                print(self._change_list.index[i])
+                interval_end_date = self._end_date_interval(date)
+                self._change_df.at[date, 'Invested'] = self._investment.total_invested()
+                self._change_df.at[date, 'Shares'] = self._investment.number_of_shares()
+                self._change_df.at[date, 'Avg. p/s'] = self._investment.average_price()
 
             # buy if determine function gives True
-            elif self._determine(self._change_list.iloc[i][0]):
-                buy_price = self._change_list.iloc[i][2] * factor_determine_buy_price
+            elif self._determine(self._change_df.iloc[i][0]):
+                buy_price = self._change_df.iloc[i][2] * factor_determine_buy_price
                 self._investment.invest(buy_price, ((self._budget*self._magnitude) / buy_price))
+                self._change_df.at[date, 'Invested'] = self._investment.total_invested()
+                self._change_df.at[date, 'Shares'] = self._investment.number_of_shares()
+                self._change_df.at[date, 'Avg. p/s'] = self._investment.average_price()
 
                 # skipping the rest of the dates in this interval
-                while self._change_list.index[i] < interval_end_date:
+                while date < interval_end_date:
                     i += 1
+                    date = self._change_df.index[i]
 
-                interval_end_date = self._end_date_interval(self._change_list.index[i])
+                interval_end_date = self._end_date_interval(date)
 
             i += 1
-
-"""
-import datetime as dt
-from datetime import datetime
-
-prevDate = datetime(1993, 1, 29)  # starting with 1993-02-01, previous date was 1993-01-29
-
-# first day strategy
-for date in results_df.index:
-    if date.month is not lastBuyMonth_fd:
-        # buy close of current date
-        noSharesBuying = budgetPerMonth / spy_df['Close'][date]
-        newNoShares = shares_fd[-1] + noSharesBuying
-        avgprice_fd.append((avgprice_fd[-1] * shares_fd[-1]
-                            + spy_df['Close'][date] * noSharesBuying) / newNoShares)
-        shares_fd.append(newNoShares)
-        lastBuyMonth_fd = date.month
-        continue
-
-    avgprice_fd.append(avgprice_fd[-1])
-    shares_fd.append(shares_fd[-1])
-
-# last day strategy
-for date in results_df.index:
-    if (date.month - lastBuyMonth_ld) == 2 or (date.month - lastBuyMonth_ld) == -10:
-        # buy close of last day of previous month
-        noSharesBuying = budgetPerMonth / spy_df['Close'][prevDate]
-        newNoShares = shares_ld[-1] + noSharesBuying
-        avgprice_ld[-1] = ((avgprice_ld[-1] * shares_ld[-1]
-                            + spy_df['Close'][prevDate] * noSharesBuying) / newNoShares)
-        shares_ld[-1] = (newNoShares)
-        lastBuyMonth_ld = prevDate.month
-
-    avgprice_ld.append(avgprice_ld[-1])
-    shares_ld.append(shares_ld[-1])
-    prevDate = date
-
-# open to close strategy
-for date in results_df.index:
-    if lastBuyMonth_oc is not date.month:
-        if (date.month - lastBuyMonth_oc) == 2 or (date.month - lastBuyMonth_oc) == -10:
-            # buy close of last day of previous month
-            noSharesBuying = budgetPerMonth / spy_df['Close'][prevDate]
-            newNoShares = shares_oc[-1] + noSharesBuying
-            avgprice_oc[-1] = ((avgprice_oc[-1] * shares_oc[-1]
-                                + spy_df['Close'][prevDate] * noSharesBuying) / newNoShares)
-            shares_oc[-1] = (newNoShares)
-            lastBuyMonth_oc = prevDate.month
-
-        if results_df['Pct. Open to Close'][date] <= -2:
-            # buy close of current date
-            noSharesBuying = (budgetPerMonth * magnitudedropbuy) / spy_df['Close'][date]
-            newNoShares = shares_oc[-1] + noSharesBuying
-            avgprice_oc.append((avgprice_oc[-1] * shares_oc[-1]
-                                + spy_df['Close'][date] * noSharesBuying) / newNoShares)
-            shares_oc.append(newNoShares)
-            lastBuyMonth_oc = date.month
-            continue
-
-    avgprice_oc.append(avgprice_oc[-1])
-    shares_oc.append(shares_oc[-1])
-    prevDate = date
-
-# Remove the initial 0's from the lists
-avgprice_fd.remove(0)
-shares_fd.remove(0)
-avgprice_ld.remove(0)
-shares_ld.remove(0)
-avgprice_oc.remove(0)
-shares_oc.remove(0)
-"""

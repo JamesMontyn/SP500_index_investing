@@ -36,6 +36,6 @@ class Investment:
         """Getter total invested"""
         return self._total_invested
 
-    def number_of_share(self):
+    def number_of_shares(self):
         """Getter number of shares"""
         return self._number_of_shares
