@@ -3,6 +3,8 @@ import pandas as pd
 import investment as iv
 from dateutil.relativedelta import relativedelta
 
+# TODO: implement random strategy (random day of month)
+
 
 class Investor:
     """The Investor class is a modal calculator of an investing strategy.
@@ -177,6 +179,24 @@ class Investor:
                 print(self._data_frame)
         else:
             print(self._data_frame)
+
+    def print_investment_stats(self, share_price):
+        """Prints the summary results of investment strategy
+
+        Parameters
+        ----------
+        share_price: float
+            current share price worth
+        """
+        print("-------=== Summary ===--------")
+        print("Total invested:", self._investment.total_invested())
+        print("Total shares:", self._investment.number_of_shares())
+        print("Avg. P/S investment:", self._investment.average_price())
+        print("Total pct. gain:",
+              (((self._investment.number_of_shares() * share_price)
+               - self._investment.total_invested())
+              / self._investment.total_invested()) * 100)
+        print("-------===============--------\n")
 
     def data_frame_to_csv(self, file_name):
         """Creates a new csv file containing the dataframe

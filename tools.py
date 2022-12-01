@@ -42,7 +42,7 @@ def create_dfs(spy_df):
     change_prev_close_to_close = []  # Pct change between Close of previous day and Close
     change_prev_close_to_low = []  # Pct change between Close of previous day and Low
 
-    prev_close = spy_df['Close'][0]
+    prev_close = spy_df['Close'][spy_df.index[0]]
 
     for date in spy_df.index:
         change_open_to_close.append(((spy_df['Close'][date] - spy_df['Open'][date]) / spy_df['Open'][date]) * 100)
@@ -62,6 +62,6 @@ def create_dfs(spy_df):
                                                        'Close': spy_df['Close']})
     change_prev_close_to_low_df = pd.DataFrame(index=spy_df.index,
                                                data={'Pct. Prev. Close to Low': change_prev_close_to_low,
-                                                     'Close': ['Close']})
+                                                     'Close': spy_df['Close']})
 
     return change_open_to_close_df, change_open_to_low_df, change_prev_close_to_close_df, change_prev_close_to_low_df
