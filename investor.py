@@ -186,14 +186,18 @@ class Investor:
         Parameters
         ----------
         share_price: float
-            current share price worth
+            current share price value
         """
+        value_investment = self._investment.number_of_shares() * share_price
+
         print("-------=== Summary ===--------")
         print("Total invested:", self._investment.total_invested())
         print("Total shares:", self._investment.number_of_shares())
         print("Avg. P/S investment:", self._investment.average_price())
+        print("Value of investment:", value_investment)
+        print("Total profit:", value_investment - self._investment.total_invested())
         print("Total pct. gain:",
-              (((self._investment.number_of_shares() * share_price)
+              ((value_investment
                - self._investment.total_invested())
               / self._investment.total_invested()) * 100)
         print("-------===============--------\n")

@@ -15,7 +15,7 @@ print(change_open_to_close_df)
 last_price = spy_df['Close'][spy_df.index[-1]]
 print(last_price)
 
-test = investor.Investor(change_open_to_close_df, 100, '1', 0, 1, 1, 1)
+test = investor.Investor(change_open_to_close_df, 500, '1', 0, 1, 1, 1)
 test.calculate_investments()
 test.print_investment_stats(last_price)
 

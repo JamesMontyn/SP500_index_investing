@@ -7,7 +7,7 @@ class Investment:
             the total money deposited/invested for this investment
 
         _number_of_shares: int
-            the total number of shares of SPY held in this investment
+            the total number of shares of index held in this investment
     """
     def __init__(self):
         """Constructor Investment"""
@@ -29,7 +29,7 @@ class Investment:
         self._number_of_shares += quantity
 
     def average_price(self):
-        """Getter average share price of SPY of investment"""
+        """Getter average share price of index of investment"""
         return self._total_invested / self._number_of_shares
 
     def total_invested(self):
