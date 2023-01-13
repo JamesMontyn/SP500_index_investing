@@ -27,7 +27,7 @@ test3 = investor.Investor(change_open_to_low_df, 100, '>', -3, 1, 1, 1)
 test3.calculate_investments()
 test3.print_investment_stats(last_price)
 
-test4 = investor.Investor(change_prev_close_to_low_df, 100, '<', -2, 1, 1, 1)
+test4 = investor.Investor(change_prev_close_to_low_df, 100, '<', -2, 1, 2, 1)
 test4.calculate_investments()
 test4.print_investment_stats(last_price)
 

@@ -1,6 +1,7 @@
 import datetime
 import pandas as pd
 import investment as iv
+import random
 from dateutil.relativedelta import relativedelta
 
 # TODO: implement random strategy (random day of month)
@@ -32,9 +33,9 @@ class Investor:
         _determiner: int
             the operator of the determine function, given as a string
             the possible determiners:
-                - '>' - greater than
-                - '<' - less than
-                - '1' - determiner is a constant, decided by determinant
+                - '>': greater than
+                - '<': less than
+                - '1': determiner is a constant, decided by determinant
 
         _determinant: int
             the factor to compare with in the determine function
@@ -51,13 +52,14 @@ class Investor:
         _interval: int
             on what day of the month the next interval will start.
             Options:
-                0: first day of the month
-                1: last day of the month
+                - 0: first day of the month
+                - 1: last day of the month
 
         _end_date_interval: def
             function that returns the end date of current interval. Possible functions:
                 - first_day_month_interval
                 - last_day_month_interval
+                - random_day_month_interval
 
         _magnitude: int
             how many times the budget should be spent when the determine function
@@ -91,7 +93,11 @@ class Investor:
             see _frequency
 
         interval: int
-            see _interval
+            the type of determine function, given as a string
+            the possible determiners:
+                - 0: first_day_month_interval
+                - 1: last_day_month_interval
+                - 2: random_day_month_interval
 
         magnitude: float
             see _magnitude
@@ -114,6 +120,8 @@ class Investor:
             self._end_date_interval = self.first_day_month_interval
         elif interval == 1:
             self._end_date_interval = self.last_day_month_interval
+        elif interval == 2:
+            self._end_date_interval = self.random_day_month_interval
         else:
             print('interval {} is not a valid option'.format(self._determine))
             self._end_date_interval = self.first_day_month_interval
@@ -166,6 +174,16 @@ class Investor:
             end_date += relativedelta(days=1)
         return end_date
 
+    def random_day_month_interval(self, current_date):
+        first_date_of_month = current_date + relativedelta(months=self._frequency)
+        candidates = [date for date in self._data_frame.index
+                      if first_date_of_month.year == date.year and first_date_of_month.month == date.month]
+
+        # if no candidates found, we are looking at 'future' data, so return the last date in the dataframe
+        if not candidates:
+            return self._data_frame.index[-1]
+        return random.choice(candidates)
+
     def print_data_frame(self, full):
         """Prints the data frame
 
@@ -199,7 +217,7 @@ class Investor:
         print("Total pct. gain:",
               ((value_investment
                - self._investment.total_invested())
-              / self._investment.total_invested()) * 100)
+               / self._investment.total_invested()) * 100)
         print("-------===============--------\n")
 
     def data_frame_to_csv(self, file_name):
